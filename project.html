@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حجز موعد - صالون الحلاقة</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d0d0d;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ===== BACKGROUND ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        linear-gradient(135deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 100%),
+        url('bg.jpg') center/cover no-repeat fixed;
+      z-index: -1;
+    }
+
+    /* Subtle animated gradient overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(180, 130, 70, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(180, 130, 70, 0.05) 0%, transparent 50%);
+      z-index: -1;
+      animation: shimmer 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes shimmer {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* ===== CONTAINER ===== */
+    .booking-container {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(18, 18, 18, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 28px;
+      padding: 50px 40px 45px;
+      border: 1px solid rgba(180, 130, 70, 0.2);
+      box-shadow: 
+        0 30px 80px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(180, 130, 70, 0.1);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .booking-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 40px 100px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(180, 130, 70, 0.15);
+    }
+
+    /* Top accent line */
+    .booking-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #b48246, #d4a96a, #b48246, transparent);
+      border-radius: 0 0 4px 4px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    /* Scissors icon */
+    .icon-scissors {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(180, 130, 70, 0.2), rgba(180, 130, 70, 0.05));
+      border: 1px solid rgba(180, 130, 70, 0.25);
+      margin-bottom: 18px;
+      font-size: 32px;
+      color: #d4a96a;
+      transition: all 0.3s ease;
+    }
+
+    .booking-container:hover .icon-scissors {
+      background: linear-gradient(135deg, rgba(180, 130, 70, 0.3), rgba(180, 130, 70, 0.1));
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(180, 130, 70, 0.15);
+    }
+
+    .header h1 {
+      font-size: 30px;
+      font-weight: 900;
+      color: #f0e6d3;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .header h1 span {
+      color: #d4a96a;
+    }
+
+    .header p {
+      color: rgba(240, 230, 211, 0.5);
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      color: rgba(240, 230, 211, 0.7);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+    }
+
+    .form-group:focus-within label {
+      color: #d4a96a;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .input-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: rgba(180, 130, 70, 0.4);
+      pointer-events: none;
+      transition: color 0.3s ease;
+    }
+
+    .form-group:focus-within .input-icon {
+      color: #d4a96a;
+    }
+
+    /* For date/time icons - use left side */
+    .input-wrapper.date-icon .input-icon,
+    .input-wrapper.time-icon .input-icon {
+      right: 16px;
+      left: auto;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 16px 50px 16px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(180, 130, 70, 0.15);
+      border-radius: 14px;
+      color: #f0e6d3;
+      font-size: 16px;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 400;
+      outline: none;
+      transition: all 0.35s ease;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(240, 230, 211, 0.25);
+      font-weight: 300;
+    }
+
+    .form-group input:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(180, 130, 70, 0.25);
+    }
+
+    .form-group input:focus {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: #b48246;
+      box-shadow: 0 0 0 3px rgba(180, 130, 70, 0.12), 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Style date/time inputs */
+    .form-group input[type="date"],
+    .form-group input[type="time"] {
+      direction: ltr;
+      text-align: left;
+      padding: 16px 18px 16px 50px;
+      color-scheme: dark;
+    }
+
+    .form-group input[type="date"]::-webkit-calendar-picker-indicator,
+    .form-group input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7) sepia(0.3) hue-rotate(350deg) saturate(0.8);
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .form-group input[type="date"]::-webkit-calendar-picker-indicator:hover,
+    .form-group input[type="time"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    /* ===== ROW: Date + Time ===== */
+    .row-duo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ===== SUBMIT BUTTON ===== */
+    .btn-submit {
+      width: 100%;
+      padding: 17px 30px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, #b48246, #d4a96a);
+      border: none;
+      border-radius: 14px;
+      color: #0d0d0d;
+      font-family: 'Cairo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.35s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(180, 130, 70, 0.35);
+    }
+
+    .btn-submit:hover::before {
+      left: 100%;
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(180, 130, 70, 0.25);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ===== MESSAGE / TOAST ===== */
+    .toast {
+      margin-top: 20px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: rgba(46, 204, 113, 0.12);
+      border: 1px solid rgba(46, 204, 113, 0.25);
+      color: #2ecc71;
+    }
+
+    .toast.error {
+      background: rgba(231, 76, 60, 0.12);
+      border: 1px solid rgba(231, 76, 60, 0.25);
+      color: #e74c3c;
+    }
+
+    /* ===== DECORATIVE ELEMENTS ===== */
+    .deco-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 28px;
+    }
+
+    .deco-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(180, 130, 70, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .deco-dots span:nth-child(2) {
+      background: rgba(180, 130, 70, 0.4);
+    }
+
+    .booking-container:hover .deco-dots span {
+      background: rgba(180, 130, 70, 0.35);
+    }
+
+    .booking-container:hover .deco-dots span:nth-child(2) {
+      background: rgba(180, 130, 70, 0.55);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 560px) {
+      .booking-container {
+        padding: 35px 24px 35px;
+        border-radius: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .row-duo {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .btn-submit {
+        font-size: 16px;
+        padding: 15px 24px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .booking-container {
+        padding: 28px 18px 28px;
+      }
+
+      .header h1 {
+        font-size: 21px;
+      }
+
+      .icon-scissors {
+        width: 60px;
+        height: 60px;
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="booking-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="icon-scissors">✂️</div>
+      <h1>صالون <span>مصطفى للحلاقة</span></h1>
+      <p>احجز موعدك بكل سهولة</p>
+    </div>
+
+    <!-- Booking Form -->
+    <form id="bookingForm" novalidate>
+      <!-- Name -->
+      <div class="form-group">
+        <label for="customerName">الاسم الكامل</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="customerName" name="customerName" placeholder="أدخل اسمك هنا" required autocomplete="name">
+        </div>
+
+      <!-- Phone -->
+      <div class="form-group">
+        <label for="customerPhone">رقم الهاتف</label>
+        <div class="input-wrapper">
+          <span class="input-icon">📞</span>
+          <input type="tel" id="customerPhone" name="customerPhone" placeholder="+963xxxxxxxxx" required autocomplete="tel">
+        </div>
+
+      <!-- Row: Date + Time -->
+      <div class="row-duo">
+        <div class="form-group">
+          <label for="bookingDate">التاريخ</label>
+          <div class="input-wrapper date-icon">
+            <span class="input-icon">📅</span>
+            <input type="date" id="bookingDate" name="bookingDate" required>
+          </div>
+
+        <div class="form-group">
+          <label for="bookingTime">الوقت</label>
+          <div class="input-wrapper time-icon">
+            <span class="input-icon">⏰</span>
+            <input type="time" id="bookingTime" name="bookingTime" required>
+          </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-submit" id="submitBtn">
+        تأكيد الحجز
+      </button>
+
+      <!-- Toast Message -->
+      <div class="toast" id="toast"></div>
+    </form>
+
+    <!-- Decorative Dots -->
+    <div class="deco-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+  <script>
+    (function() {
+      const API_BASE = '/api';
+      const form = document.getElementById('bookingForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const toast = document.getElementById('toast');
+
+      // Set default date to today and time to current time + 1 hour
+      function setDefaults() {
+        const now = new Date();
+        
+        // Date: YYYY-MM-DD
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        document.getElementById('bookingDate').value = `${year}-${month}-${day}`;
+        document.getElementById('bookingDate').min = `${year}-${month}-${day}`;
+
+        // Time: current hour + 1, rounded to next half hour
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        hours += 1;
+        if (minutes > 30) {
+          hours += 1;
+          minutes = 0;
+        } else {
+          minutes = 30;
+        }
+        if (hours >= 24) hours = 23;
+        const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        document.getElementById('bookingTime').value = timeStr;
+      }
+
+      setDefaults();
+
+      // Show toast message
+      function showToast(message, type = 'success') {
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 5000);
+      }
+
+      // Client-side validation
+      function validateForm() {
+        const name = document.getElementById('customerName').value.trim();
+        const phone = document.getElementById('customerPhone').value.trim();
+        const date = document.getElementById('bookingDate').value;
+        const time = document.getElementById('bookingTime').value;
+
+        if (!name || name.length < 2) {
+          showToast('❌ الرجاء إدخال اسم صحيح (حرفين على الأقل)', 'error');
+          document.getElementById('customerName').focus();
+          return false;
+        }
+
+        if (!phone) {
+          showToast('❌ الرجاء إدخال رقم الهاتف', 'error');
+          document.getElementById('customerPhone').focus();
+          return false;
+        }
+
+        const phoneClean = phone.replace(/\s/g, '');
+        const phoneRegex = /^(09\d{8}|\+9639\d{8})$/;
+        if (!phoneRegex.test(phoneClean)) {
+          showToast('❌ رقم الهاتف غير صالح (09xxxxxxxx أو +9639xxxxxxxx)', 'error');
+          document.getElementById('customerPhone').focus();
+          return false;
+        }
+
+        if (!date || !time) {
+          showToast('❌ الرجاء اختيار التاريخ والوقت', 'error');
+          return false;
+        }
+
+        const selectedDate = new Date(`${date}T${time}`);
+        if (selectedDate <= new Date()) {
+          showToast('❌ الرجاء اختيار تاريخ ووقت في المستقبل', 'error');
+          return false;
+        }
+
+        return true;
+      }
+
+      // Submit booking to backend
+      async function submitBooking(data) {
+        const response = await fetch(`${API_BASE}/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return await response.json();
+      }
+
+      // Handle form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+
+        // Disable button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري إرسال الطلب...';
+
+        const formData = {
+          name: document.getElementById('customerName').value.trim(),
+          phone: document.getElementById('customerPhone').value.trim(),
+          date: document.getElementById('bookingDate').value,
+          time: document.getElementById('bookingTime').value,
+        };
+
+        try {
+          const result = await submitBooking(formData);
+
+          if (result.success) {
+            showToast('✅ ' + result.message, 'success');
+            // Reset form but keep defaults
+            form.reset();
+            setDefaults();
+          } else {
+            showToast('❌ ' + result.message, 'error');
+          }
+        } catch (err) {
+          showToast('❌ حدث خطأ في الاتصال بالخادم، الرجاء المحاولة لاحقاً', 'error');
+          console.error('Error:', err);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'تأكيد الحجز';
+        }
+      });
+
+      // Real-time phone formatting (allow digits and +)
+      document.getElementById('customerPhone').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9+]/g, '');
+        if (this.value.indexOf('+') > 0) {
+          this.value = this.value.replace(/\+/g, '');
+        }
+      });
+
+      // Check available slots when date changes
+      document.getElementById('bookingDate').addEventListener('change', async function() {
+        const date = this.value;
+        const timeInput = document.getElementById('bookingTime');
+        
+        if (!date) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/check?date=${date}`);
+          const result = await response.json();
+          
+          if (result.success && result.data.available.length > 0) {
+            // If current time is booked, suggest an available one
+            const currentTime = timeInput.value;
+            if (!result.data.available.includes(currentTime)) {
+              timeInput.value = result.data.available[0];
+              showToast(`💡 تم تغيير الوقت إلى ${result.data.available[0]} لأنه غير متاح`, 'success');
+            }
+          } else if (result.success && result.data.available.length === 0) {
+            showToast('⚠️ لا توجد أوقات متاحة في هذا التاريخ', 'error');
+          }
+        } catch (err) {
+          console.error('Error checking availability:', err);
+        }
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
