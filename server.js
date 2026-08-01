@@ -31,7 +31,7 @@ const bookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  service: { type: String, required: true },
+  services: { type: [String], required: true },
   date: { type: String, required: true },
   time: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
@@ -59,8 +59,15 @@ function validatePhone(phone) {
   return /^(09\d{8}|\+9639\d{8})$/.test(clean);
 }
 
+function getBookingDurationMinutes(services) {
+  // Single service = 60 min, multiple services = 90 min
+  const list = Array.isArray(services) ? services : (services ? [services] : []);
+  return list.length > 1 ? 90 : 60;
+}
+
 function validateBooking(data) {
   const errors = [];
+  const services = data.services;
 
   if (!data.name || data.name.trim().length < 2) {
     errors.push('الاسم غير صالح (يجب أن يكون حرفين على الأقل)');
@@ -70,8 +77,14 @@ function validateBooking(data) {
     errors.push('رقم الهاتف غير صالح (يجب أن يبدأ بـ 09 أو +9639)');
   }
 
-  if (!data.service || !SERVICES[data.service]) {
+  if (!Array.isArray(services) || services.length === 0) {
     errors.push('الرجاء اختيار الخدمة المطلوبة');
+  } else {
+    services.forEach(s => {
+      if (!SERVICES[s]) {
+        errors.push(`الخدمة غير معروفة: ${s}`);
+      }
+    });
   }
 
   if (!data.date) {
@@ -95,10 +108,17 @@ function validateBooking(data) {
       errors.push('الصالون مغلق يوم الجمعة، الرجاء اختيار يوم آخر');
     }
 
-    // Working hours: 10:00 AM - 10:00 PM (last booking at 21:00 since each booking takes 1 hour)
+    // Working hours: 10:00 AM - 10:00 PM
+    // Single service (60 min): last booking at 21:00
+    // Multiple services (90 min): last booking at 20:30
+    const duration = getBookingDurationMinutes(services);
     const [hour, minute] = data.time.split(':').map(Number);
-    if (hour < 10 || hour > 21 || (hour === 21 && minute > 0)) {
-      errors.push('ساعات العمل من 10 صباحاً حتى 10 مساءً، وآخر موعد للحجز 9 مساءً');
+    const lastAllowedHour = duration > 60 ? 20 : 21;
+    const lastAllowedMinute = duration > 60 ? 30 : 0;
+    if (hour < 10 || hour > lastAllowedHour || (hour === lastAllowedHour && minute > lastAllowedMinute)) {
+      errors.push(duration > 60
+        ? 'ساعات العمل من 10 صباحاً حتى 10 مساءً، وآخر موعد لحجز خدمتين أو أكثر هو 8:30 مساءً'
+        : 'ساعات العمل من 10 صباحاً حتى 10 مساءً، وآخر موعد للحجز 9 مساءً');
     }
   }
 
@@ -114,14 +134,16 @@ async function sendTelegramNotification(booking) {
     const formattedDate = dateObj.toLocaleDateString('ar-SA', options);
     const formattedTime = booking.time;
 
-    const serviceLabel = SERVICES[booking.service] ? SERVICES[booking.service].telegram : booking.service;
+    const serviceList = (Array.isArray(booking.services) ? booking.services : [booking.service].filter(Boolean))
+      .map(s => SERVICES[s] ? SERVICES[s].telegram : s);
+    const serviceLabel = serviceList.length > 0 ? serviceList.join(' + ') : 'غير محدد';
 
     const message = `
 🪒 *حجز جديد في صالون الأناقة!*
 
 👤 *الاسم:* ${booking.name}
 📞 *الهاتف:* ${booking.phone}
-💈 *الخدمة:* ${serviceLabel}
+💈 *الخدمات:* ${serviceLabel}
 📅 *التاريخ:* ${formattedDate}
 ⏰ *الوقت:* ${formattedTime}
 🆔 *رقم الحجز:* \`${booking.id.slice(0, 8)}\`
@@ -179,12 +201,19 @@ app.post('/api/bookings', async (req, res) => {
       });
     }
 
-    // Check for booking conflicts: at least 60 minutes gap between bookings
+    // Check for booking conflicts, considering booking duration (60 min single / 90 min multiple)
     const dayBookings = await Booking.find({ date: req.body.date });
+    const servicesList = Array.isArray(req.body.services) ? req.body.services : [];
+    const requestedDuration = getBookingDurationMinutes(servicesList);
     const requestedTime = new Date(`${req.body.date}T${req.body.time}`).getTime();
     const conflict = dayBookings.find(b => {
       const bTime = new Date(`${b.date}T${b.time}`).getTime();
-      return Math.abs(bTime - requestedTime) < 60 * 60 * 1000;
+      const bDuration = getBookingDurationMinutes(b.services);
+      // Overlap if requested booking starts before existing booking ends AND
+      // existing booking starts before requested booking ends
+      const requestedEnd = requestedTime + requestedDuration * 60 * 1000;
+      const bEnd = bTime + bDuration * 60 * 1000;
+      return requestedTime < bEnd && bTime < requestedEnd;
     });
     if (conflict) {
       return res.status(409).json({
@@ -197,7 +226,7 @@ app.post('/api/bookings', async (req, res) => {
       id: uuidv4(),
       name: req.body.name.trim(),
       phone: req.body.phone.trim(),
-      service: req.body.service,
+      services: servicesList,
       date: req.body.date,
       time: req.body.time,
       createdAt: new Date()
@@ -205,7 +234,7 @@ app.post('/api/bookings', async (req, res) => {
 
     await newBooking.save();
 
-    const serviceLabel = SERVICES[newBooking.service] ? SERVICES[newBooking.service].label : newBooking.service;
+    const serviceLabel = servicesList.map(s => SERVICES[s] ? SERVICES[s].label : s).join(' + ');
     console.log(`✅ New booking: ${newBooking.name} - [${serviceLabel}] - ${newBooking.date} ${newBooking.time}`);
 
     // Send Telegram notification (non-blocking)
@@ -235,7 +264,7 @@ app.delete('/api/bookings/:id', async (req, res) => {
   }
 });
 
-// GET /api/check?date=YYYY-MM-DD - Check available times for a date
+// GET /api/check?date=YYYY-MM-DD&count=N - Check available times for a date
 app.get('/api/check', async (req, res) => {
   try {
     const { date } = req.query;
@@ -243,25 +272,33 @@ app.get('/api/check', async (req, res) => {
       return res.status(400).json({ success: false, message: 'التاريخ مطلوب' });
     }
 
-    const dayBookings = await Booking.find({ date }).select('time -_id');
+    // Number of selected services determines the booking duration:
+    // 1 service = 60 min, 2+ services = 90 min
+    const count = parseInt(req.query.count, 10);
+    const serviceCount = !isNaN(count) && count > 0 ? count : 1;
+    const requestedDuration = serviceCount > 1 ? 90 : 60;
 
-    // Working hours: 10:00 AM - 10:00 PM, last booking at 21:00 (each booking takes 1 hour)
+    const dayBookings = await Booking.find({ date }).select('time services -_id');
+
+    // Working hours: 10:00 AM - 10:00 PM
     const allSlots = [];
     for (let h = 10; h <= 21; h++) {
       for (let m = 0; m < 60; m += 30) {
-        // Last booking must be at 21:00 or earlier (21:30 would exceed closing time)
         if (h === 21 && m > 0) continue;
         const slot = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         allSlots.push(slot);
       }
     }
 
-    // A slot is unavailable if there's a booking within 60 minutes of it
+    // A slot is unavailable if the requested booking would overlap any existing booking
     const unavailableSlots = allSlots.filter(slot => {
       const slotTime = new Date(`${date}T${slot}`).getTime();
+      const slotEnd = slotTime + requestedDuration * 60 * 1000;
       return dayBookings.some(b => {
         const bTime = new Date(`${date}T${b.time}`).getTime();
-        return Math.abs(bTime - slotTime) < 60 * 60 * 1000;
+        const bDuration = getBookingDurationMinutes(b.services);
+        const bEnd = bTime + bDuration * 60 * 1000;
+        return slotTime < bEnd && bTime < slotEnd;
       });
     });
 
