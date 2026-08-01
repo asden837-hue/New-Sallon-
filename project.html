@@ -248,6 +248,29 @@
       letter-spacing: 0.5px;
     }
 
+    .services-hint {
+      display: block;
+      color: rgba(212, 169, 106, 0.6);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .selected-summary {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(180, 130, 70, 0.12), rgba(180, 130, 70, 0.04));
+      border: 1px solid rgba(212, 169, 106, 0.25);
+      color: #f0e6d3;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.7;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
     .services-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -733,6 +756,24 @@
       }
     }
 
+    /* ===== MOBILE BACKGROUND FIX (lighten dark overlay + disable fixed attachment) ===== */
+    @media (max-width: 768px) {
+      body {
+        background: #120d08;
+      }
+
+      body::before {
+        background:
+          linear-gradient(135deg, rgba(10, 10, 15, 0.45) 0%, rgba(40, 26, 12, 0.35) 50%, rgba(50, 30, 14, 0.45) 100%),
+          url('bg.jpg') center/cover no-repeat scroll;
+        background-attachment: scroll;
+      }
+
+      .particle {
+        display: none;
+      }
+    }
+
     @media (max-width: 400px) {
       .booking-container {
         padding: 28px 18px 28px;
@@ -772,7 +813,7 @@
 
       <!-- Service Selection (بطاقات اختيار الخدمة) -->
       <div class="services-section">
-        <label class="section-label">اختر الخدمة المطلوبة</label>
+        <label class="section-label">اختر الخدمة المطلوبة (يمكنك اختيار أكثر من خدمة)</label>
         <div class="services-grid" id="servicesGrid">
           <div class="service-card" data-service="hair" tabindex="0">
             <div class="service-emoji">💇</div>
@@ -792,6 +833,8 @@
             <div class="service-name">VIP للعريس</div>
           </div>
         </div>
+        <span class="services-hint">✨ يمكنك اختيار أكثر من خدمة، وعند اختيار خدمة إضافية تصبح مدة الحجز ساعة ونصف</span>
+        <div class="selected-summary" id="selectedSummary">لم تختر أي خدمة بعد</div>
       </div>
 
       <!-- Name -->
@@ -856,7 +899,15 @@
       const submitBtn = document.getElementById('submitBtn');
       const toast = document.getElementById('toast');
       const servicesGrid = document.getElementById('servicesGrid');
-      let selectedService = null;
+      let selectedServices = [];
+
+      // ===== Service display labels =====
+      const SERVICES_LABELS = {
+        hair: '💇 قص شعر',
+        hair_beard: '💈 شعر وذقن',
+        skin_mask: '🧖‍♂️ ماسك للبشرة',
+        groom_vip: '👑 VIP للعريس'
+      };
 
       // ===== Floating gold particles =====
       function createParticles() {
@@ -875,26 +926,45 @@
       }
       createParticles();
 
-      // ===== Service card selection =====
+      // ===== Service card selection (multi-select) =====
       const serviceCards = document.querySelectorAll('.service-card');
+      const selectedSummary = document.getElementById('selectedSummary');
 
-      function selectService(card) {
-        // Remove selected from all
-        serviceCards.forEach(c => c.classList.remove('selected'));
-        // Select this card
-        card.classList.add('selected');
-        selectedService = card.dataset.service;
+      function updateSelectedSummary() {
+        if (selectedServices.length === 0) {
+          selectedSummary.textContent = 'لم تختر أي خدمة بعد';
+          selectedSummary.style.opacity = '0.65';
+        } else {
+          const labels = selectedServices.map(s => SERVICES_LABELS[s] || s);
+          selectedSummary.textContent = '✓ الخدمات المختارة: ' + labels.join(' + ');
+          selectedSummary.style.opacity = '1';
+        }
+      }
+
+      function toggleService(card) {
+        const service = card.dataset.service;
+        const idx = selectedServices.indexOf(service);
+        if (idx > -1) {
+          selectedServices.splice(idx, 1);
+          card.classList.remove('selected');
+        } else {
+          selectedServices.push(service);
+          card.classList.add('selected');
+        }
+        updateSelectedSummary();
       }
 
       serviceCards.forEach(card => {
-        card.addEventListener('click', () => selectService(card));
+        card.addEventListener('click', () => toggleService(card));
         card.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            selectService(card);
+            toggleService(card);
           }
         });
       });
+
+      updateSelectedSummary();
 
       // Set default date to today (skip Friday) and time respecting working hours 10:00-21:00
       function setDefaults() {
@@ -988,8 +1058,8 @@
         const date = document.getElementById('bookingDate').value;
         const time = document.getElementById('bookingTime').value;
 
-        if (!selectedService) {
-          showToast('❌ الرجاء اختيار الخدمة المطلوبة', 'error');
+        if (selectedServices.length === 0) {
+          showToast('❌ الرجاء اختيار خدمة واحدة على الأقل', 'error');
           return false;
         }
 
@@ -1061,7 +1131,7 @@
         const formData = {
           name: document.getElementById('customerName').value.trim(),
           phone: document.getElementById('customerPhone').value.trim(),
-          service: selectedService,
+          services: selectedServices,
           date: document.getElementById('bookingDate').value,
           time: document.getElementById('bookingTime').value,
         };
@@ -1075,9 +1145,10 @@
             // Reset form but keep defaults
             form.reset();
             setDefaults();
-            // Clear selected service
-            selectedService = null;
+            // Clear selected services
+            selectedServices = [];
             serviceCards.forEach(c => c.classList.remove('selected'));
+            updateSelectedSummary();
           } else {
             showToast('❌ ' + result.message, 'error');
           }
@@ -1106,7 +1177,7 @@
         if (!date) return;
 
         try {
-          const response = await fetch(`${API_BASE}/check?date=${date}`);
+          const response = await fetch(`${API_BASE}/check?date=${date}&count=${Math.max(1, selectedServices.length)}`);
           const result = await response.json();
           
           if (result.success && result.data.available.length > 0) {

@@ -1,9 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const dns = require('dns');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const mongoose = require('mongoose');
+
+// ===== DNS FIX: Use public DNS to resolve MongoDB Atlas SRV records =====
+// Some ISP/network DNS servers (e.g. 192.168.1.1) block or refuse SRV lookups
+// which causes `querySrv ECONNREFUSED` when connecting to MongoDB Atlas.
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 // ===== TELEGRAM CONFIG =====
 const TELEGRAM_TOKEN = '8878277151:AAE6JybwCl6NZtsnoEAuG_909voiBzPiO4M';
@@ -90,8 +96,8 @@ function validateBooking(data) {
     }
 
     // Working hours: 10:00 AM - 10:00 PM (last booking at 21:00 since each booking takes 1 hour)
-    const [hour] = data.time.split(':').map(Number);
-    if (hour < 10 || hour > 21) {
+    const [hour, minute] = data.time.split(':').map(Number);
+    if (hour < 10 || hour > 21 || (hour === 21 && minute > 0)) {
       errors.push('ساعات العمل من 10 صباحاً حتى 10 مساءً، وآخر موعد للحجز 9 مساءً');
     }
   }
@@ -243,6 +249,8 @@ app.get('/api/check', async (req, res) => {
     const allSlots = [];
     for (let h = 10; h <= 21; h++) {
       for (let m = 0; m < 60; m += 30) {
+        // Last booking must be at 21:00 or earlier (21:30 would exceed closing time)
+        if (h === 21 && m > 0) continue;
         const slot = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         allSlots.push(slot);
       }

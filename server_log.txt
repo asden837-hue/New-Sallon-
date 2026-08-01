@@ -1,4 +1,4 @@
-🧹 Auto cleanup scheduled daily at 11:00 PM (first run in 1367 minutes)
+🧹 Auto cleanup scheduled daily at 11:00 PM (first run in 1306 minutes)
 
 ╔══════════════════════════════════╗
 ║   🏪 صالون الأناقة - نظام الحجز ║
@@ -10,3 +10,5 @@
 ║  🧹 Auto cleanup: 11:00 PM      ║
 ╚══════════════════════════════════╝
   
+✅ Connected to MongoDB
+🧹 Auto cleanup: no expired bookings to remove

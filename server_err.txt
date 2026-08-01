@@ -1,8 +1,22 @@
-❌ MongoDB connection error: Error: querySrv ECONNREFUSED _mongodb._tcp.cluster0.riilmut.mongodb.net
-    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:295:17) {
-  errno: undefined,
-  code: 'ECONNREFUSED',
-  syscall: 'querySrv',
-  hostname: '_mongodb._tcp.cluster0.riilmut.mongodb.net'
-}
-❌ Auto cleanup error: Operation `bookings.deleteMany()` buffering timed out after 10000ms
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (C:\Users\MS Tech\Desktop\My_Project\node_modules\body-parser\lib\types\json.js:96:19)
+    at C:\Users\MS Tech\Desktop\My_Project\node_modules\body-parser\lib\read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at invokeCallback (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:238:16)
+    at done (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:509:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (C:\Users\MS Tech\Desktop\My_Project\node_modules\body-parser\lib\types\json.js:96:19)
+    at C:\Users\MS Tech\Desktop\My_Project\node_modules\body-parser\lib\read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at invokeCallback (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:238:16)
+    at done (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (C:\Users\MS Tech\Desktop\My_Project\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:509:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
