@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ===== MONGODB CONNECTION =====
-const MONGODB_URI = 'mongodb+srv://admin:saloon1234@cluster0.riilmut.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://asden837_db_user:kQJ0y3hsExteJXs0@cluster0.riilmut.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
@@ -25,10 +25,19 @@ const bookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
+  service: { type: String, required: true },
   date: { type: String, required: true },
   time: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
+
+// ===== SERVICES CONFIG =====
+const SERVICES = {
+  hair: { label: '💇 قص شعر', telegram: '💇 قص شعر' },
+  hair_beard: { label: '💈 شعر وذقن', telegram: '💈 شعر وذقن' },
+  skin_mask: { label: '🧖‍♂️ ماسك للبشرة', telegram: '🧖‍♂️ ماسك للبشرة' },
+  groom_vip: { label: '👑 VIP للعريس', telegram: '👑 VIP للعريس' }
+};
 
 const Booking = mongoose.model('Booking', bookingSchema);
 
@@ -55,6 +64,10 @@ function validateBooking(data) {
     errors.push('رقم الهاتف غير صالح (يجب أن يبدأ بـ 09 أو +9639)');
   }
 
+  if (!data.service || !SERVICES[data.service]) {
+    errors.push('الرجاء اختيار الخدمة المطلوبة');
+  }
+
   if (!data.date) {
     errors.push('التاريخ مطلوب');
   }
@@ -75,6 +88,12 @@ function validateBooking(data) {
     if (dayOfWeek === 5) {
       errors.push('الصالون مغلق يوم الجمعة، الرجاء اختيار يوم آخر');
     }
+
+    // Working hours: 10:00 AM - 10:00 PM (last booking at 21:00 since each booking takes 1 hour)
+    const [hour] = data.time.split(':').map(Number);
+    if (hour < 10 || hour > 21) {
+      errors.push('ساعات العمل من 10 صباحاً حتى 10 مساءً، وآخر موعد للحجز 9 مساءً');
+    }
   }
 
   return errors;
@@ -89,11 +108,14 @@ async function sendTelegramNotification(booking) {
     const formattedDate = dateObj.toLocaleDateString('ar-SA', options);
     const formattedTime = booking.time;
 
+    const serviceLabel = SERVICES[booking.service] ? SERVICES[booking.service].telegram : booking.service;
+
     const message = `
 🪒 *حجز جديد في صالون الأناقة!*
 
 👤 *الاسم:* ${booking.name}
 📞 *الهاتف:* ${booking.phone}
+💈 *الخدمة:* ${serviceLabel}
 📅 *التاريخ:* ${formattedDate}
 ⏰ *الوقت:* ${formattedTime}
 🆔 *رقم الحجز:* \`${booking.id.slice(0, 8)}\`
@@ -151,12 +173,17 @@ app.post('/api/bookings', async (req, res) => {
       });
     }
 
-    // Check for double booking (same date and time)
-    const conflict = await Booking.findOne({ date: req.body.date, time: req.body.time });
+    // Check for booking conflicts: at least 60 minutes gap between bookings
+    const dayBookings = await Booking.find({ date: req.body.date });
+    const requestedTime = new Date(`${req.body.date}T${req.body.time}`).getTime();
+    const conflict = dayBookings.find(b => {
+      const bTime = new Date(`${b.date}T${b.time}`).getTime();
+      return Math.abs(bTime - requestedTime) < 60 * 60 * 1000;
+    });
     if (conflict) {
       return res.status(409).json({
         success: false,
-        message: 'هذا الموعد محجوز بالفعل، الرجاء اختيار وقت آخر'
+        message: `هذا الموعد يتعارض مع حجز الساعة ${conflict.time}، يجب أن يكون بين كل حجز والحجز التالي ساعة على الأقل`
       });
     }
 
@@ -164,6 +191,7 @@ app.post('/api/bookings', async (req, res) => {
       id: uuidv4(),
       name: req.body.name.trim(),
       phone: req.body.phone.trim(),
+      service: req.body.service,
       date: req.body.date,
       time: req.body.time,
       createdAt: new Date()
@@ -171,7 +199,8 @@ app.post('/api/bookings', async (req, res) => {
 
     await newBooking.save();
 
-    console.log(`✅ New booking: ${newBooking.name} - ${newBooking.date} ${newBooking.time}`);
+    const serviceLabel = SERVICES[newBooking.service] ? SERVICES[newBooking.service].label : newBooking.service;
+    console.log(`✅ New booking: ${newBooking.name} - [${serviceLabel}] - ${newBooking.date} ${newBooking.time}`);
 
     // Send Telegram notification (non-blocking)
     sendTelegramNotification(newBooking);
@@ -209,9 +238,8 @@ app.get('/api/check', async (req, res) => {
     }
 
     const dayBookings = await Booking.find({ date }).select('time -_id');
-    const bookedTimes = dayBookings.map(b => b.time);
 
-    // Generate all available time slots (10:00 - 21:00, every 30 min)
+    // Working hours: 10:00 AM - 10:00 PM, last booking at 21:00 (each booking takes 1 hour)
     const allSlots = [];
     for (let h = 10; h <= 21; h++) {
       for (let m = 0; m < 60; m += 30) {
@@ -220,7 +248,16 @@ app.get('/api/check', async (req, res) => {
       }
     }
 
-    const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot));
+    // A slot is unavailable if there's a booking within 60 minutes of it
+    const unavailableSlots = allSlots.filter(slot => {
+      const slotTime = new Date(`${date}T${slot}`).getTime();
+      return dayBookings.some(b => {
+        const bTime = new Date(`${date}T${b.time}`).getTime();
+        return Math.abs(bTime - slotTime) < 60 * 60 * 1000;
+      });
+    });
+
+    const availableSlots = allSlots.filter(slot => !unavailableSlots.includes(slot));
 
     // Check if the date is Friday
     const dateObj = new Date(date + 'T12:00:00');
@@ -231,7 +268,7 @@ app.get('/api/check', async (req, res) => {
       data: {
         date,
         isFriday,
-        booked: isFriday ? allSlots : bookedTimes,
+        booked: isFriday ? allSlots : unavailableSlots,
         available: isFriday ? [] : availableSlots
       }
     });
@@ -251,6 +288,62 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ===== AUTO CLEANUP: Delete passed bookings every day at 11:00 PM =====
+
+async function cleanupExpiredBookings() {
+  try {
+    const now = new Date();
+    // Today's date as YYYY-MM-DD in server local time
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    // Delete bookings whose date is before today
+    const result = await Booking.deleteMany({ date: { $lt: today } });
+
+    // Delete today's bookings whose time has already passed
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const todayPassed = await Booking.deleteMany({
+      date: today,
+      time: { $lte: currentTime }
+    });
+
+    const totalDeleted = result.deletedCount + todayPassed.deletedCount;
+    if (totalDeleted > 0) {
+      console.log(`🧹 Auto cleanup: removed ${totalDeleted} expired booking(s)`);
+    } else {
+      console.log('🧹 Auto cleanup: no expired bookings to remove');
+    }
+  } catch (err) {
+    console.error('❌ Auto cleanup error:', err.message);
+  }
+}
+
+// Schedule cleanup every day at 11:00 PM (server local time)
+function scheduleAutoCleanup() {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(23, 0, 0, 0); // 11:00 PM
+
+  let delay = target - now;
+  if (delay < 0) {
+    // Already past 11 PM today, schedule for tomorrow
+    target.setDate(target.getDate() + 1);
+    delay = target - now;
+  }
+
+  console.log(`🧹 Auto cleanup scheduled daily at 11:00 PM (first run in ${Math.round(delay / 60000)} minutes)`);
+
+  setTimeout(async () => {
+    await cleanupExpiredBookings();
+    // Re-schedule for the next day
+    scheduleAutoCleanup();
+  }, delay);
+}
+
+// Run initial cleanup shortly after startup (after MongoDB connects)
+setTimeout(() => {
+  cleanupExpiredBookings();
+}, 5000);
+
 // ===== START SERVER =====
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -262,6 +355,10 @@ app.listen(PORT, '0.0.0.0', () => {
 ║  📍 Port: ${PORT}                  ║
 ║  📋 API: /api                    ║
 ║  💾 MongoDB: Connected           ║
+║  🧹 Auto cleanup: 11:00 PM      ║
 ╚══════════════════════════════════╝
   `);
 });
+
+// Start the daily auto cleanup scheduler
+scheduleAutoCleanup();

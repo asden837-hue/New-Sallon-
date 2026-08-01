@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>حجز موعد - صالون الحلاقة</title>
+  <title>حجز موعد - صالون مصطفى للحلاقة</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+
     /* ===== RESET & BASE ===== */
     * {
       margin: 0;
@@ -12,7 +14,15 @@
       box-sizing: border-box;
     }
 
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+    :root {
+      --gold: #d4a96a;
+      --gold-light: #f0d9a8;
+      --gold-dark: #b48246;
+      --bg-dark: #0a0a0f;
+      --text-light: #f5efe4;
+      --royal: #1a1a2e;
+      --card-bg: rgba(212, 169, 106, 0.06);
+    }
 
     body {
       font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
@@ -20,7 +30,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0d0d0d;
+      background: var(--bg-dark);
       padding: 20px;
       position: relative;
       overflow-x: hidden;
@@ -32,32 +42,56 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: 
-        linear-gradient(135deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 100%),
+        linear-gradient(135deg, rgba(10,10,15,0.94) 0%, rgba(18,14,8,0.85) 50%, rgba(26,20,10,0.92) 100%),
         url('bg.jpg') center/cover no-repeat fixed;
       z-index: -1;
     }
 
-    /* Subtle animated gradient overlay */
+    /* Subtle animated golden glow overlay */
     body::after {
       content: '';
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: 
-        radial-gradient(circle at 20% 50%, rgba(180, 130, 70, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 50%, rgba(180, 130, 70, 0.05) 0%, transparent 50%);
+        radial-gradient(circle at 15% 40%, rgba(212, 169, 106, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 85% 60%, rgba(212, 169, 106, 0.06) 0%, transparent 50%);
       z-index: -1;
-      animation: shimmer 8s ease-in-out infinite alternate;
+      animation: shimmer 7s ease-in-out infinite alternate;
     }
 
     @keyframes shimmer {
-      0% { opacity: 0.5; }
-      100% { opacity: 1; }
+      0% { opacity: 0.4; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* ===== FLOATING GOLD PARTICLES ===== */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212, 169, 106, 0.9), rgba(180, 130, 70, 0));
+      pointer-events: none;
+      z-index: 0;
+      animation: floatUp linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(110vh) scale(0);
+        opacity: 0;
+      }
+      10% { opacity: 0.7; }
+      90% { opacity: 0.4; }
+      100% {
+        transform: translateY(-10vh) scale(1.2);
+        opacity: 0;
+      }
     }
 
     /* ===== CONTAINER ===== */
     .booking-container {
       width: 100%;
-      max-width: 520px;
+      max-width: 560px;
       background: rgba(18, 18, 18, 0.85);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -70,6 +104,19 @@
       position: relative;
       overflow: hidden;
       transition: transform 0.4s ease, box-shadow 0.4s ease;
+      animation: fadeInUp 0.8s ease both;
+      z-index: 1;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .booking-container:hover {
@@ -92,7 +139,47 @@
     /* ===== HEADER ===== */
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
+    }
+
+    /* ===== WORKING HOURS BAR ===== */
+    .hours-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, rgba(212, 169, 106, 0.10), rgba(212, 169, 106, 0.03));
+      border: 1px solid rgba(212, 169, 106, 0.2);
+      border-radius: 14px;
+      animation: fadeInUp 0.8s ease 0.15s both;
+    }
+
+    .hours-bar .hours-icon {
+      font-size: 20px;
+      animation: clockTick 2s ease-in-out infinite;
+    }
+
+    @keyframes clockTick {
+      0%, 100% { transform: rotate(0deg); }
+      10% { transform: rotate(15deg); }
+      20% { transform: rotate(-10deg); }
+      30% { transform: rotate(8deg); }
+      40% { transform: rotate(0deg); }
+    }
+
+    .hours-bar span {
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .hours-bar small {
+      color: rgba(240, 230, 211, 0.55);
+      font-size: 12px;
+      font-weight: 400;
     }
 
     /* Scissors icon */
@@ -109,6 +196,14 @@
       font-size: 32px;
       color: #d4a96a;
       transition: all 0.3s ease;
+      animation: bounceIn 1s ease both;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.15); opacity: 1; }
+      80% { transform: scale(0.95); }
+      100% { transform: scale(1); }
     }
 
     .booking-container:hover .icon-scissors {
@@ -126,7 +221,10 @@
     }
 
     .header h1 span {
-      color: #d4a96a;
+      background: linear-gradient(135deg, #d4a96a, #b48246, #d4a96a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .header p {
@@ -134,6 +232,200 @@
       font-size: 15px;
       font-weight: 300;
       letter-spacing: 0.5px;
+    }
+
+    /* ===== SERVICE SELECTION (بطاقات الخدمات) ===== */
+    .services-section {
+      margin-bottom: 28px;
+    }
+
+    .services-section .section-label {
+      display: block;
+      color: rgba(240, 230, 211, 0.7);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .service-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 18px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(180, 130, 70, 0.15);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.35s ease;
+      text-align: center;
+      user-select: none;
+      opacity: 0;
+      animation: cardEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Staggered entrance for service cards */
+    .service-card:nth-child(1) { animation-delay: 0.20s; }
+    .service-card:nth-child(2) { animation-delay: 0.30s; }
+    .service-card:nth-child(3) { animation-delay: 0.40s; }
+    .service-card:nth-child(4) { animation-delay: 0.50s; }
+
+    @keyframes cardEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.94);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .service-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(180, 130, 70, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 22px rgba(212, 169, 106, 0.18);
+    }
+
+    .service-card:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    /* Golden glow on hover */
+    .service-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at 50% 0%, rgba(212, 169, 106, 0.12), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .service-card:hover::before {
+      opacity: 1;
+    }
+
+    .service-card .service-emoji {
+      font-size: 30px;
+      transition: transform 0.35s ease;
+    }
+
+    .service-card:hover .service-emoji {
+      transform: scale(1.2) rotate(-8deg);
+    }
+
+    .service-card .service-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f0e6d3;
+    }
+
+    /* Selected state */
+    .service-card.selected {
+      background: linear-gradient(135deg, rgba(180, 130, 70, 0.25), rgba(180, 130, 70, 0.1));
+      border-color: #d4a96a;
+      box-shadow: 0 0 0 2px rgba(212, 169, 106, 0.2), 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .service-card.selected .service-name {
+      color: #d4a96a;
+    }
+
+    .service-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d4a96a, #b48246);
+      color: #0d0d0d;
+      font-size: 13px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+
+    /* ===== VIP CARD (للعرايس) ===== */
+    .service-card.vip-card {
+      background: linear-gradient(135deg, rgba(212, 169, 106, 0.18), rgba(180, 130, 70, 0.06));
+      border: 1px solid rgba(212, 169, 106, 0.45);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card.vip-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent 0%, rgba(212, 169, 106, 0.15) 15%, transparent 30%, transparent 50%, rgba(212, 169, 106, 0.15) 65%, transparent 80%);
+      animation: vipShine 4s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes vipShine {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .service-card.vip-card .service-name {
+      color: #d4a96a;
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .service-card.vip-card .vip-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: linear-gradient(135deg, #d4a96a, #b48246);
+      color: #0d0d0d;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 3px 12px rgba(212, 169, 106, 0.4);
+      z-index: 2;
+    }
+
+    .service-card.vip-card.selected {
+      background: linear-gradient(135deg, rgba(212, 169, 106, 0.4), rgba(180, 130, 70, 0.15));
+      border-color: #d4a96a;
+      box-shadow: 0 0 25px rgba(212, 169, 106, 0.35), 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .service-card.vip-card .service-emoji {
+      animation: crownFloat 2.5s ease-in-out infinite;
+    }
+
+    @keyframes crownFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     /* ===== FORM ===== */
@@ -284,10 +576,66 @@
     }
 
     .btn-submit:disabled {
-      opacity: 0.5;
+      opacity: 0.6;
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
+    }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      background: rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      animation: rippleAnim 0.7s ease-out forwards;
+    }
+
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Loading spinner inside button */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(13, 13, 13, 0.25);
+      border-top-color: #0d0d0d;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-left: 8px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== CONFETTI ===== */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 14px;
+      top: -20px;
+      z-index: 9999;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(105vh) rotate(720deg);
+        opacity: 0.2;
+      }
     }
 
     /* ===== MESSAGE / TOAST ===== */
@@ -319,6 +667,12 @@
       background: rgba(231, 76, 60, 0.12);
       border: 1px solid rgba(231, 76, 60, 0.25);
       color: #e74c3c;
+    }
+
+    .toast.info {
+      background: rgba(52, 152, 219, 0.12);
+      border: 1px solid rgba(52, 152, 219, 0.25);
+      color: #3498db;
     }
 
     /* ===== DECORATIVE ELEMENTS ===== */
@@ -365,6 +719,10 @@
         gap: 0;
       }
 
+      .services-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
       .form-group {
         margin-bottom: 20px;
       }
@@ -402,8 +760,40 @@
       <p>احجز موعدك بكل سهولة</p>
     </div>
 
+    <!-- Working Hours -->
+    <div class="hours-bar">
+      <span class="hours-icon">🕐</span>
+      <span>ساعات العمل: 10 صباحاً - 10 مساءً</span>
+      <small>| آخر موعد للحجز 9 مساءً</small>
+    </div>
+
     <!-- Booking Form -->
     <form id="bookingForm" novalidate>
+
+      <!-- Service Selection (بطاقات اختيار الخدمة) -->
+      <div class="services-section">
+        <label class="section-label">اختر الخدمة المطلوبة</label>
+        <div class="services-grid" id="servicesGrid">
+          <div class="service-card" data-service="hair" tabindex="0">
+            <div class="service-emoji">💇</div>
+            <div class="service-name">قص شعر</div>
+          </div>
+          <div class="service-card" data-service="hair_beard" tabindex="0">
+            <div class="service-emoji">💈</div>
+            <div class="service-name">شعر وذقن</div>
+          </div>
+          <div class="service-card" data-service="skin_mask" tabindex="0">
+            <div class="service-emoji">🧖‍♂️</div>
+            <div class="service-name">ماسك للبشرة</div>
+          </div>
+          <div class="service-card vip-card" data-service="groom_vip" tabindex="0">
+            <div class="vip-badge">VIP</div>
+            <div class="service-emoji">👑</div>
+            <div class="service-name">VIP للعريس</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Name -->
       <div class="form-group">
         <label for="customerName">الاسم الكامل</label>
@@ -411,6 +801,7 @@
           <span class="input-icon">👤</span>
           <input type="text" id="customerName" name="customerName" placeholder="أدخل اسمك هنا" required autocomplete="name">
         </div>
+      </div>
 
       <!-- Phone -->
       <div class="form-group">
@@ -419,6 +810,7 @@
           <span class="input-icon">📞</span>
           <input type="tel" id="customerPhone" name="customerPhone" placeholder="+963xxxxxxxxx" required autocomplete="tel">
         </div>
+      </div>
 
       <!-- Row: Date + Time -->
       <div class="row-duo">
@@ -428,13 +820,15 @@
             <span class="input-icon">📅</span>
             <input type="date" id="bookingDate" name="bookingDate" required>
           </div>
+        </div>
 
         <div class="form-group">
           <label for="bookingTime">الوقت</label>
           <div class="input-wrapper time-icon">
             <span class="input-icon">⏰</span>
-            <input type="time" id="bookingTime" name="bookingTime" required>
+            <input type="time" id="bookingTime" name="bookingTime" min="10:00" max="21:00" step="1800" required>
           </div>
+        </div>
       </div>
 
       <!-- Submit -->
@@ -453,25 +847,72 @@
       <span></span>
     </div>
 
+  </div>
+
   <script>
     (function() {
       const API_BASE = '/api';
       const form = document.getElementById('bookingForm');
       const submitBtn = document.getElementById('submitBtn');
       const toast = document.getElementById('toast');
+      const servicesGrid = document.getElementById('servicesGrid');
+      let selectedService = null;
 
-      // Set default date to today and time to current time + 1 hour
+      // ===== Floating gold particles =====
+      function createParticles() {
+        const count = window.innerWidth < 560 ? 12 : 20;
+        for (let i = 0; i < count; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          const size = Math.random() * 6 + 2;
+          particle.style.width = size + 'px';
+          particle.style.height = size + 'px';
+          particle.style.left = Math.random() * 100 + 'vw';
+          particle.style.animationDuration = (Math.random() * 12 + 8) + 's';
+          particle.style.animationDelay = (Math.random() * 12) + 's';
+          document.body.appendChild(particle);
+        }
+      }
+      createParticles();
+
+      // ===== Service card selection =====
+      const serviceCards = document.querySelectorAll('.service-card');
+
+      function selectService(card) {
+        // Remove selected from all
+        serviceCards.forEach(c => c.classList.remove('selected'));
+        // Select this card
+        card.classList.add('selected');
+        selectedService = card.dataset.service;
+      }
+
+      serviceCards.forEach(card => {
+        card.addEventListener('click', () => selectService(card));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectService(card);
+          }
+        });
+      });
+
+      // Set default date to today (skip Friday) and time respecting working hours 10:00-21:00
       function setDefaults() {
         const now = new Date();
         
-        // Date: YYYY-MM-DD
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
+        // Find next non-Friday day
+        const today = new Date(now);
+        let dateObj = new Date(today);
+        while (dateObj.getDay() === 5) {
+          dateObj.setDate(dateObj.getDate() + 1);
+        }
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
         document.getElementById('bookingDate').value = `${year}-${month}-${day}`;
         document.getElementById('bookingDate').min = `${year}-${month}-${day}`;
 
-        // Time: current hour + 1, rounded to next half hour
+        // Time: current hour + 1, rounded to next half hour, within 10:00 - 21:00
         let hours = now.getHours();
         let minutes = now.getMinutes();
         hours += 1;
@@ -481,12 +922,54 @@
         } else {
           minutes = 30;
         }
-        if (hours >= 24) hours = 23;
+        if (hours < 10) {
+          hours = 10;
+          minutes = 0;
+        }
+        if (hours > 21) {
+          hours = 21;
+          minutes = 0;
+        }
+        if (hours === 21 && minutes > 30) minutes = 30;
+        if (hours >= 22) hours = 21;
         const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         document.getElementById('bookingTime').value = timeStr;
       }
 
       setDefaults();
+
+      // ===== Ripple effect on submit button =====
+      function createRipple(event) {
+        const btn = event.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (event.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (event.clientY - rect.top - size / 2) + 'px';
+        btn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 700);
+      }
+      submitBtn.addEventListener('click', createRipple);
+
+      // ===== Gold confetti on success =====
+      function launchConfetti() {
+        const colors = ['#d4a96a', '#f0d9a8', '#b48246', '#ffd700', '#e0c07a'];
+        const count = window.innerWidth < 560 ? 40 : 70;
+        for (let i = 0; i < count; i++) {
+          const piece = document.createElement('div');
+          piece.className = 'confetti-piece';
+          piece.style.left = Math.random() * 100 + 'vw';
+          piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.animationDuration = (Math.random() * 2.5 + 2) + 's';
+          piece.style.animationDelay = (Math.random() * 0.5) + 's';
+          piece.style.width = (Math.random() * 6 + 6) + 'px';
+          piece.style.height = (Math.random() * 8 + 8) + 'px';
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), 5500);
+        }
+      }
 
       // Show toast message
       function showToast(message, type = 'success') {
@@ -504,6 +987,11 @@
         const phone = document.getElementById('customerPhone').value.trim();
         const date = document.getElementById('bookingDate').value;
         const time = document.getElementById('bookingTime').value;
+
+        if (!selectedService) {
+          showToast('❌ الرجاء اختيار الخدمة المطلوبة', 'error');
+          return false;
+        }
 
         if (!name || name.length < 2) {
           showToast('❌ الرجاء إدخال اسم صحيح (حرفين على الأقل)', 'error');
@@ -536,6 +1024,17 @@
           return false;
         }
 
+        const [hour] = time.split(':').map(Number);
+        if (hour < 10 || hour > 21) {
+          showToast('❌ ساعات العمل من 10 صباحاً حتى 9 مساءً', 'error');
+          return false;
+        }
+
+        if (selectedDate.getDay() === 5) {
+          showToast('❌ الصالون مغلق يوم الجمعة، الرجاء اختيار يوم آخر', 'error');
+          return false;
+        }
+
         return true;
       }
 
@@ -555,13 +1054,14 @@
 
         if (!validateForm()) return;
 
-        // Disable button
+        // Disable button + show spinner
         submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري إرسال الطلب...';
+        submitBtn.innerHTML = '<span class="spinner"></span> جاري إرسال الطلب...';
 
         const formData = {
           name: document.getElementById('customerName').value.trim(),
           phone: document.getElementById('customerPhone').value.trim(),
+          service: selectedService,
           date: document.getElementById('bookingDate').value,
           time: document.getElementById('bookingTime').value,
         };
@@ -571,9 +1071,13 @@
 
           if (result.success) {
             showToast('✅ ' + result.message, 'success');
+            launchConfetti();
             // Reset form but keep defaults
             form.reset();
             setDefaults();
+            // Clear selected service
+            selectedService = null;
+            serviceCards.forEach(c => c.classList.remove('selected'));
           } else {
             showToast('❌ ' + result.message, 'error');
           }
@@ -610,7 +1114,7 @@
             const currentTime = timeInput.value;
             if (!result.data.available.includes(currentTime)) {
               timeInput.value = result.data.available[0];
-              showToast(`💡 تم تغيير الوقت إلى ${result.data.available[0]} لأنه غير متاح`, 'success');
+              showToast(`💡 تم تغيير الوقت إلى ${result.data.available[0]} لأنه غير متاح`, 'info');
             }
           } else if (result.success && result.data.available.length === 0) {
             showToast('⚠️ لا توجد أوقات متاحة في هذا التاريخ', 'error');
@@ -625,3 +1129,4 @@
 
 </body>
 </html>
+

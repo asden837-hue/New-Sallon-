@@ -1,9 +1,12 @@
+🧹 Auto cleanup scheduled daily at 11:00 PM (first run in 1367 minutes)
 
 ╔══════════════════════════════════╗
 ║   🏪 صالون الأناقة - نظام الحجز ║
 ╠══════════════════════════════════╣
 ║  ✅ Server is running!           ║
-║  📍 http://localhost:3000        ║
-║  📋 API: http://localhost:3000/api ║
+║  📍 Port: 3000                  ║
+║  📋 API: /api                    ║
+║  💾 MongoDB: Connected           ║
+║  🧹 Auto cleanup: 11:00 PM      ║
 ╚══════════════════════════════════╝
   

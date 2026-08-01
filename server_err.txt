@@ -1,0 +1,8 @@
+❌ MongoDB connection error: Error: querySrv ECONNREFUSED _mongodb._tcp.cluster0.riilmut.mongodb.net
+    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:295:17) {
+  errno: undefined,
+  code: 'ECONNREFUSED',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.cluster0.riilmut.mongodb.net'
+}
+❌ Auto cleanup error: Operation `bookings.deleteMany()` buffering timed out after 10000ms
