@@ -13,7 +13,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 // ===== TELEGRAM CONFIG =====
 const TELEGRAM_TOKEN = '8878277151:AAE6JybwCl6NZtsnoEAuG_909voiBzPiO4M';
-const TELEGRAM_CHAT_ID = '5069514628';
+const TELEGRAM_CHAT_ID = '5333127409';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
 const app = express();
