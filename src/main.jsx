@@ -309,8 +309,8 @@ function Booking({ selectedServices, setSelectedServices }) {
         <span className="section-kicker">04 — دورك الآن</span>
         <h2>لحظتك تبدأ<br /><span className="gold-text">من هنا.</span></h2>
         <p>اختر الخدمة والوقت الذي يناسبك.<br />نحن نهتمّ بالباقي.</p>
-        <div className="booking-detail"><Clock3 size={17} /><span>يومياً من ١٠ صباحاً إلى ١٠ مساءً</span></div>
-        <div className="booking-detail"><MapPin size={17} /><span>صالون ORO — الروضة، دمشق</span></div>
+        <div className="booking-detail"><Clock3 size={17} /><span>يومياً ما عدا يوم الجمعة، من ١٠ صباحاً إلى ١٠ مساءً</span></div>
+        <div className="booking-detail"><MapPin size={17} /><span>زورونا في دمشق، الروضة</span></div>
       </Reveal>
       <Reveal className="booking-panel" delay={0.12}>
         <div className="booking-panel-top"><div><span className="panel-kicker">ORO PRIVATE BOOKING</span><h3>احجز زيارتك القادمة</h3>{selectedService && <p className="booking-selected-service" aria-live="polite">الخدمة المختارة: {selectedService.name}</p>}</div><span className="panel-mark"><CalendarDays size={18} /></span></div>
