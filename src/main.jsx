@@ -56,15 +56,29 @@ function Spotlight() {
   const rawY = useMotionValue(-500);
   const x = useSpring(rawX, { stiffness: 55, damping: 22 });
   const y = useSpring(rawY, { stiffness: 55, damping: 22 });
+  const [touchInput, setTouchInput] = React.useState(false);
 
   React.useEffect(() => {
+    const touchQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
     const move = event => {
       rawX.set(event.clientX - 220);
       rawY.set(event.clientY - 220);
     };
-    window.addEventListener('pointermove', move, { passive: true });
-    return () => window.removeEventListener('pointermove', move);
+    const updateInputMode = () => {
+      setTouchInput(touchQuery.matches);
+      if (touchQuery.matches) window.removeEventListener('pointermove', move);
+      else window.addEventListener('pointermove', move, { passive: true });
+    };
+
+    updateInputMode();
+    touchQuery.addEventListener('change', updateInputMode);
+    return () => {
+      touchQuery.removeEventListener('change', updateInputMode);
+      window.removeEventListener('pointermove', move);
+    };
   }, [rawX, rawY]);
+
+  if (touchInput) return <div className="pointer-glow pointer-glow-mobile" aria-hidden="true" />;
 
   return <motion.div className="pointer-glow" style={{ x, y }} aria-hidden="true" />;
 }
@@ -103,10 +117,10 @@ function Hero() {
             <span className="eyebrow-line" /> صالون ORO للحلاقة الرجالية
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.8 }}>
-            <span>حلاقة رجالية</span><span>بمعايير راقية</span>
+            <span>صالون ORO</span><span>لحلاقة رجالية راقية</span>
           </motion.h1>
           <motion.p className="hero-description" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
-            قصّات دقيقة، عناية متقنة، وأجواء هادئة.<br className="desktop-break" /> نعتني بتفاصيل إطلالتك في كل زيارة.
+            حلاقون محترفون وأفخم قصات الشعر الرجالي.<br className="desktop-break" /> عناية بالذقن وتجربة راقية في الروضة، دمشق.
           </motion.p>
         </div>
 
@@ -167,7 +181,7 @@ function TiltCard({ children, className = '' }) {
   return <div ref={ref} className={className} onMouseMove={onMove} onMouseLeave={() => setRotation({ x: 0, y: 0 })} style={{ transform: `perspective(850px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}>{children}</div>;
 }
 
-function Services() {
+function Services({ onBookService }) {
   return (
     <section className="services-section section-shell" id="services">
       <Reveal className="section-heading">
@@ -179,7 +193,7 @@ function Services() {
           const Icon = service.icon;
           return (
             <TiltCard key={service.id} className={`tilt-shell ${service.featured ? 'service-featured' : ''}`}>
-              <motion.a className="service-card" href="#booking" variants={fadeUp}>
+              <motion.a className="service-card" href="#booking" variants={fadeUp} onClick={() => onBookService(service.id)}>
                 <div className="service-number">0{index + 1}</div>
                 <span className="service-icon"><Icon size={21} strokeWidth={1.5} /></span>
                 {service.featured && <span className="vip-tag">EXCLUSIVE</span>}
@@ -209,8 +223,7 @@ function Numbers() {
   );
 }
 
-function Booking() {
-  const [selectedServices, setSelectedServices] = React.useState([]);
+function Booking({ selectedServices, setSelectedServices }) {
   const [form, setForm] = React.useState({ name: '', phone: '', date: '', time: '' });
   const [available, setAvailable] = React.useState([]);
   const [loadingSlots, setLoadingSlots] = React.useState(false);
@@ -223,8 +236,7 @@ function Booking() {
     while (date.getDay() === 5) date.setDate(date.getDate() + 1);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }, []);
-  const selectedDuration = selectedServices.length > 1 ? 90 : 60;
-
+  const selectedService = services.find(service => service.id === selectedServices[0]);
   React.useEffect(() => () => clearTimeout(timer.current), []);
 
   function showToast(message, type = 'success') {
@@ -257,13 +269,9 @@ function Booking() {
     }
   }
 
-  function toggleService(id) {
-    const next = selectedServices.includes(id)
-      ? selectedServices.filter(service => service !== id)
-      : [...selectedServices, id];
-    setSelectedServices(next);
-    if (form.date) loadSlots(form.date, Math.max(1, next.length));
-  }
+  React.useEffect(() => {
+    if (form.date && selectedServices.length) loadSlots(form.date);
+  }, [selectedServices]);
 
   async function submitBooking(event) {
     event.preventDefault();
@@ -302,17 +310,11 @@ function Booking() {
         <h2>لحظتك تبدأ<br /><span className="gold-text">من هنا.</span></h2>
         <p>اختر الخدمة والوقت الذي يناسبك.<br />نحن نهتمّ بالباقي.</p>
         <div className="booking-detail"><Clock3 size={17} /><span>يومياً من ١٠ صباحاً إلى ١٠ مساءً</span></div>
-        <div className="booking-detail"><MapPin size={17} /><span>زورنا — في قلب المدينة</span></div>
+        <div className="booking-detail"><MapPin size={17} /><span>صالون ORO — الروضة، دمشق</span></div>
       </Reveal>
       <Reveal className="booking-panel" delay={0.12}>
-        <div className="booking-panel-top"><div><span className="panel-kicker">ORO PRIVATE BOOKING</span><h3>احجز زيارتك القادمة</h3></div><span className="panel-mark"><CalendarDays size={18} /></span></div>
+        <div className="booking-panel-top"><div><span className="panel-kicker">ORO PRIVATE BOOKING</span><h3>احجز زيارتك القادمة</h3>{selectedService && <p className="booking-selected-service" aria-live="polite">الخدمة المختارة: {selectedService.name}</p>}</div><span className="panel-mark"><CalendarDays size={18} /></span></div>
         <form className="booking-form" onSubmit={submitBooking} noValidate>
-          <fieldset className="form-services"><legend>اختر تجربتك <span>— يمكنك اختيار أكثر من خدمة</span></legend>
-            <div className="booking-service-list">
-              {services.map(({ id, icon: Icon, name }) => <button type="button" key={id} className={selectedServices.includes(id) ? 'booking-service selected' : 'booking-service'} aria-pressed={selectedServices.includes(id)} onClick={() => toggleService(id)}><Icon size={16} /><span>{name}</span>{selectedServices.includes(id) && <Check size={14} />}</button>)}
-            </div>
-            {selectedServices.length > 0 && <span className="duration-note">المدة التقديرية: {selectedDuration} دقيقة</span>}
-          </fieldset>
           <div className="form-row">
             <label className="field"><span>الاسم الكامل</span><span className="input-shell"><UserRound size={16} /><input name="name" value={form.name} onChange={updateForm} placeholder="كيف نناديك؟" autoComplete="name" minLength="2" required /></span></label>
             <label className="field"><span>رقم الهاتف</span><span className="input-shell"><span className="phone-code">+٩٦٣</span><input name="phone" type="tel" value={form.phone} onChange={updateForm} placeholder="09xxxxxxxx" autoComplete="tel" required /></span></label>
@@ -343,13 +345,19 @@ function Footer() {
 }
 
 function App() {
+  const [selectedServices, setSelectedServices] = React.useState([]);
+
+  function selectBookingService(id) {
+    setSelectedServices([id]);
+  }
+
   return (
     <>
       <Spotlight />
       <div className="ambient ambient-one" aria-hidden="true" />
       <div className="ambient ambient-two" aria-hidden="true" />
       <Header />
-      <main><Hero /><Ticker /><Story /><Services /><Numbers /><Booking /></main>
+      <main><Hero /><Ticker /><Story /><Services onBookService={selectBookingService} /><Numbers /><Booking selectedServices={selectedServices} setSelectedServices={setSelectedServices} /></main>
       <Footer />
     </>
   );
