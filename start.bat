@@ -7,6 +7,15 @@ echo    🏪 صالون الأناقة - نظام الحجز
 echo ============================================
 echo.
 
+echo 🛠 Building the website...
+call npm run build
+if errorlevel 1 (
+    echo ❌ Website build failed. Please check the error above.
+    pause
+    exit /b 1
+)
+echo.
+
 :: Check if server is already running
 netstat -ano | findstr :3000 >nul 2>&1
 if %ERRORLEVEL%==0 (

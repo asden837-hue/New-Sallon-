@@ -58,7 +58,7 @@ git push -u origin main
 |--------|--------|
 | **Name** | `barbershop-booking` |
 | **Environment** | `Node` |
-| **Build Command** | `npm install` |
+| **Build Command** | `npm install && npm run build` |
 | **Start Command** | `node server.js` |
 | **Plan** | **Free** |
 

@@ -50,7 +50,7 @@ const Booking = mongoose.model('Booking', bookingSchema);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '.')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // ===== VALIDATION =====
 
@@ -303,6 +303,8 @@ app.get('/api/check', async (req, res) => {
     });
 
     const availableSlots = allSlots.filter(slot => !unavailableSlots.includes(slot));
+    const lastStartTime = requestedDuration > 60 ? '20:30' : '21:00';
+    const withinWorkingHours = availableSlots.filter(slot => slot <= lastStartTime);
 
     // Check if the date is Friday
     const dateObj = new Date(date + 'T12:00:00');
@@ -314,7 +316,7 @@ app.get('/api/check', async (req, res) => {
         date,
         isFriday,
         booked: isFriday ? allSlots : unavailableSlots,
-        available: isFriday ? [] : availableSlots
+        available: isFriday ? [] : withinWorkingHours
       }
     });
   } catch (err) {
@@ -325,7 +327,12 @@ app.get('/api/check', async (req, res) => {
 // ===== SERVE FRONTEND =====
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'project.html'));
+  const appPath = path.join(__dirname, 'dist', 'index.html');
+  res.sendFile(appPath, err => {
+    if (err) {
+      res.sendFile(path.join(__dirname, 'project.html'));
+    }
+  });
 });
 
 // ===== HEALTH CHECK ENDPOINT (for UptimeRobot) =====
